@@ -1,0 +1,101 @@
+{
+    "functions": [
+        {
+            "name": "createCampaign",
+            "type": "Function",
+            "payable": false,
+            "onlyOwner": false,
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "ADDRESS"
+                },
+                {
+                    "name": "entries",
+                    "type": "ADDRESS_UINT256_TUPLE"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "campaignId",
+                    "type": "UINT256"
+                }
+            ]
+        },
+        {
+            "name": "getCampaign",
+            "type": "View",
+            "payable": false,
+            "onlyOwner": false,
+            "inputs": [
+                {
+                    "name": "campaignId",
+                    "type": "UINT256"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "creator",
+                    "type": "BYTES32"
+                },
+                {
+                    "name": "token",
+                    "type": "BYTES32"
+                },
+                {
+                    "name": "totalAmount",
+                    "type": "UINT256"
+                },
+                {
+                    "name": "recipientCount",
+                    "type": "UINT32"
+                },
+                {
+                    "name": "blockHeight",
+                    "type": "UINT256"
+                }
+            ]
+        },
+        {
+            "name": "getCampaignCount",
+            "type": "View",
+            "payable": false,
+            "onlyOwner": false,
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "count",
+                    "type": "UINT256"
+                }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "name": "CampaignCreated",
+            "values": [
+                {
+                    "name": "campaignId",
+                    "type": "UINT256"
+                },
+                {
+                    "name": "creator",
+                    "type": "ADDRESS"
+                },
+                {
+                    "name": "token",
+                    "type": "ADDRESS"
+                },
+                {
+                    "name": "totalAmount",
+                    "type": "UINT256"
+                },
+                {
+                    "name": "recipientCount",
+                    "type": "UINT32"
+                }
+            ],
+            "type": "Event"
+        }
+    ]
+}

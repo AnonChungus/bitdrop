@@ -12,7 +12,6 @@ import {
     Selector,
     StoredMapU256,
     StoredU256,
-    sha256,
 } from '@btc-vision/btc-runtime/runtime';
 
 // NOTE: @method, @returns, @emit, @final, and ABIDataTypes are compile-time
@@ -24,21 +23,20 @@ import {
 
 class CampaignCreated extends NetEvent {
     public constructor(
-        public readonly campaignId: u256,
-        public readonly creator: Address,
-        public readonly token: Address,
-        public readonly totalAmount: u256,
-        public readonly recipientCount: u32,
+        campaignId: u256,
+        creator: Address,
+        token: Address,
+        totalAmount: u256,
+        recipientCount: u32,
     ) {
-        super('CampaignCreated');
-    }
-
-    protected override encodeData(writer: BytesWriter): void {
-        writer.writeU256(this.campaignId);
-        writer.writeAddress(this.creator);
-        writer.writeAddress(this.token);
-        writer.writeU256(this.totalAmount);
-        writer.writeU32(this.recipientCount);
+        // u256(32) + address(32) + address(32) + u256(32) + u32(4) = 132 bytes
+        const writer = new BytesWriter(132);
+        writer.writeU256(campaignId);
+        writer.writeAddress(creator);
+        writer.writeAddress(token);
+        writer.writeU256(totalAmount);
+        writer.writeU32(recipientCount);
+        super('CampaignCreated', writer);
     }
 }
 
@@ -49,7 +47,7 @@ class CampaignCreated extends NetEvent {
 @final
 export class AirdropRegistry extends OP_NET {
     // -----------------------------------------------------------------------
-    // Selectors — own methods
+    // Selectors
     // -----------------------------------------------------------------------
     private readonly createCampaignSelector: Selector = encodeSelector(
         'createCampaign(address,tuple(address,uint256)[])',
@@ -66,7 +64,7 @@ export class AirdropRegistry extends OP_NET {
     );
 
     // -----------------------------------------------------------------------
-    // Storage pointers (all via Blockchain.nextPointer — never raw constants)
+    // Storage pointers
     // -----------------------------------------------------------------------
     private readonly campaignCountPointer: u16 = Blockchain.nextPointer;
     private readonly campaignCreatorPointer: u16 = Blockchain.nextPointer;
@@ -78,9 +76,10 @@ export class AirdropRegistry extends OP_NET {
     // -----------------------------------------------------------------------
     // Storage instances
     // -----------------------------------------------------------------------
+    // StoredU256(pointer, subPointer: Uint8Array) — subPointer acts as a namespace
     private readonly campaignCount: StoredU256 = new StoredU256(
         this.campaignCountPointer,
-        u256.Zero,
+        new Uint8Array(30),
     );
     private readonly campaignCreator: StoredMapU256 = new StoredMapU256(
         this.campaignCreatorPointer,
@@ -97,11 +96,10 @@ export class AirdropRegistry extends OP_NET {
     }
 
     // -----------------------------------------------------------------------
-    // callMethod router
+    // execute router (overrides OP_NET.execute)
     // -----------------------------------------------------------------------
-    public override callMethod(calldata: Calldata): BytesWriter {
-        const selector = calldata.readSelector();
-        switch (selector) {
+    public override execute(method: Selector, calldata: Calldata): BytesWriter {
+        switch (method) {
             case this.createCampaignSelector:
                 return this.createCampaign(calldata);
             case this.getCampaignSelector:
@@ -109,13 +107,18 @@ export class AirdropRegistry extends OP_NET {
             case this.getCampaignCountSelector:
                 return this.getCampaignCount(calldata);
             default:
-                return super.callMethod(calldata);
+                return super.execute(method, calldata);
         }
     }
 
     // -----------------------------------------------------------------------
     // createCampaign
-    // Creator must have approved this contract to spend totalAmount of token
+    // Creator must approve this contract to spend totalAmount of token first.
+    // Per-call limit is capped by Bitcoin transaction witness data size.
+    // At 64 bytes/recipient, 200 recipients ≈ 13 KB witness → safe for all miners.
+    // The frontend handles client-side batching for lists larger than BATCH_SIZE.
+    // The contract enforces a generous per-call cap of 5000 entries to prevent
+    // malformed oversized calldata; realistic single-tx limit is ~200.
     // -----------------------------------------------------------------------
     @method(
         { name: 'token', type: ABIDataTypes.ADDRESS },
@@ -127,11 +130,6 @@ export class AirdropRegistry extends OP_NET {
         const token = calldata.readAddress();
         const count = calldata.readU32();
 
-        // Per-call limit is capped by Bitcoin transaction witness data size.
-        // At 64 bytes/recipient, 500 recipients ≈ 32 KB witness → safe for all miners.
-        // The frontend handles client-side batching for lists larger than BATCH_SIZE.
-        // The contract itself enforces a generous per-call cap of 5 000 entries to
-        // prevent malformed oversized calldata; realistic single-tx limit is ~500.
         if (count === 0 || count > 5000) {
             throw new Revert('Recipient count must be 1-5000 per call');
         }
@@ -151,14 +149,15 @@ export class AirdropRegistry extends OP_NET {
             throw new Revert('Total amount must be > 0');
         }
 
-        // Assign campaign ID
-        const campaignId = this.campaignCount.get();
-        this.campaignCount.set(SafeMath.add(campaignId, u256.One));
+        // Assign campaign ID (read then increment)
+        const campaignId = this.campaignCount.value;
+        this.campaignCount.value = SafeMath.add(campaignId, u256.One);
 
         // Store campaign metadata
         const creator = Blockchain.tx.sender;
-        this.campaignCreator.set(campaignId, this.addressToU256(creator));
-        this.campaignToken.set(campaignId, this.addressToU256(token));
+        // Address extends Uint8Array (32 bytes) — convert directly to u256 for map key
+        this.campaignCreator.set(campaignId, u256.fromUint8ArrayBE(creator));
+        this.campaignToken.set(campaignId, u256.fromUint8ArrayBE(token));
         this.campaignTotal.set(campaignId, totalAmount);
         this.campaignRecipientCount.set(campaignId, u256.fromU32(count));
         this.campaignBlock.set(campaignId, u256.fromU64(Blockchain.block.number));
@@ -185,8 +184,8 @@ export class AirdropRegistry extends OP_NET {
     // -----------------------------------------------------------------------
     @method({ name: 'campaignId', type: ABIDataTypes.UINT256 })
     @returns(
-        { name: 'creator', type: ABIDataTypes.ADDRESS },
-        { name: 'token', type: ABIDataTypes.ADDRESS },
+        { name: 'creator', type: ABIDataTypes.BYTES32 },
+        { name: 'token', type: ABIDataTypes.BYTES32 },
         { name: 'totalAmount', type: ABIDataTypes.UINT256 },
         { name: 'recipientCount', type: ABIDataTypes.UINT32 },
         { name: 'blockHeight', type: ABIDataTypes.UINT256 },
@@ -195,7 +194,7 @@ export class AirdropRegistry extends OP_NET {
     private getCampaign(calldata: Calldata): BytesWriter {
         const campaignId = calldata.readU256();
 
-        const totalCampaigns = this.campaignCount.get();
+        const totalCampaigns = this.campaignCount.value;
         if (u256.ge(campaignId, totalCampaigns)) {
             throw new Revert('Campaign does not exist');
         }
@@ -206,7 +205,7 @@ export class AirdropRegistry extends OP_NET {
         const recipientCount = this.campaignRecipientCount.get(campaignId);
         const blockHeight = this.campaignBlock.get(campaignId);
 
-        // Writer: address(32) + address(32) + u256(32) + u32(4) + u256(32) = 132 bytes
+        // bytes32(32) + bytes32(32) + u256(32) + u32(4) + u256(32) = 132 bytes
         const writer = new BytesWriter(132);
         writer.writeU256(creatorU256);
         writer.writeU256(tokenU256);
@@ -223,7 +222,7 @@ export class AirdropRegistry extends OP_NET {
     @view
     private getCampaignCount(_calldata: Calldata): BytesWriter {
         const writer = new BytesWriter(32);
-        writer.writeU256(this.campaignCount.get());
+        writer.writeU256(this.campaignCount.value);
         return writer;
     }
 
@@ -232,80 +231,35 @@ export class AirdropRegistry extends OP_NET {
     // -----------------------------------------------------------------------
 
     private callTransferFrom(token: Address, from: Address, amount: u256): void {
-        // encode transferFrom(address from, address to, uint256 amount)
+        // transferFrom(address from, address to, uint256 amount)
         // 4 (selector) + 32 (from) + 32 (to=contract) + 32 (amount) = 100 bytes
         const writer = new BytesWriter(100);
         writer.writeSelector(this.transferFromSelector);
         writer.writeAddress(from);
-        writer.writeAddress(Blockchain.contract.address);
+        writer.writeAddress(Blockchain.contractAddress);
         writer.writeU256(amount);
 
-        const result = Blockchain.call(token, writer, true);
+        const result = Blockchain.call(token, writer);
         if (result.data.byteLength > 0) {
             if (!result.data.readBoolean()) {
-                throw new Revert('transferFrom failed — check approval');
+                throw new Revert('transferFrom failed — check OP20 approval');
             }
         }
     }
 
     private callTransfer(token: Address, to: Address, amount: u256): void {
-        // encode transfer(address to, uint256 amount)
+        // transfer(address to, uint256 amount)
         // 4 (selector) + 32 (to) + 32 (amount) = 68 bytes
         const writer = new BytesWriter(68);
         writer.writeSelector(this.transferSelector);
         writer.writeAddress(to);
         writer.writeU256(amount);
 
-        const result = Blockchain.call(token, writer, true);
+        const result = Blockchain.call(token, writer);
         if (result.data.byteLength > 0) {
             if (!result.data.readBoolean()) {
-                throw new Revert('transfer failed');
+                throw new Revert('OP20 transfer failed');
             }
         }
-    }
-
-    private addressToU256(addr: Address): u256 {
-        // Serialize address to bytes and hash to u256 for StoredMapU256 storage
-        const writer = new BytesWriter(32);
-        writer.writeAddress(addr);
-        const bytes = sha256(writer.getBuffer());
-        // Build u256 from 32 hash bytes (big-endian u64 chunks)
-        const lo0: u64 =
-            ((bytes[0] as u64) << 56) |
-            ((bytes[1] as u64) << 48) |
-            ((bytes[2] as u64) << 40) |
-            ((bytes[3] as u64) << 32) |
-            ((bytes[4] as u64) << 24) |
-            ((bytes[5] as u64) << 16) |
-            ((bytes[6] as u64) << 8) |
-            (bytes[7] as u64);
-        const lo1: u64 =
-            ((bytes[8] as u64) << 56) |
-            ((bytes[9] as u64) << 48) |
-            ((bytes[10] as u64) << 40) |
-            ((bytes[11] as u64) << 32) |
-            ((bytes[12] as u64) << 24) |
-            ((bytes[13] as u64) << 16) |
-            ((bytes[14] as u64) << 8) |
-            (bytes[15] as u64);
-        const hi0: u64 =
-            ((bytes[16] as u64) << 56) |
-            ((bytes[17] as u64) << 48) |
-            ((bytes[18] as u64) << 40) |
-            ((bytes[19] as u64) << 32) |
-            ((bytes[20] as u64) << 24) |
-            ((bytes[21] as u64) << 16) |
-            ((bytes[22] as u64) << 8) |
-            (bytes[23] as u64);
-        const hi1: u64 =
-            ((bytes[24] as u64) << 56) |
-            ((bytes[25] as u64) << 48) |
-            ((bytes[26] as u64) << 40) |
-            ((bytes[27] as u64) << 32) |
-            ((bytes[28] as u64) << 24) |
-            ((bytes[29] as u64) << 16) |
-            ((bytes[30] as u64) << 8) |
-            (bytes[31] as u64);
-        return new u256(lo0, lo1, hi0, hi1);
     }
 }
