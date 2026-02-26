@@ -1,7 +1,7 @@
 {
-  "name": "@bitdrop/frontend",
+  "name": "@opdrop/frontend",
   "version": "1.0.0",
-  "description": "BitDrop — Permissionless Airdrop Machine on Bitcoin",
+  "description": "OpDrop — Neon Airdrop Machine on Bitcoin L1",
   "type": "module",
   "scripts": {
     "dev": "vite",

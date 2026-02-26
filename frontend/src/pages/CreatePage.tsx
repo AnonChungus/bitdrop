@@ -92,41 +92,46 @@ export function CreatePage(): JSX.Element {
     if (!wallet.connected) {
         return (
             <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-                <div className="text-5xl mb-6">🔐</div>
-                <h1 className="text-3xl font-bold text-bd-text mb-4">Connect your wallet</h1>
-                <p className="text-bd-muted mb-8">You need OP_WALLET to create airdrops on Bitcoin.</p>
-                <Button onClick={() => void connect()} size="lg">Connect Wallet</Button>
+                <div className="text-5xl mb-6 flicker">🔌</div>
+                <h1 className="text-3xl font-display font-black mb-4 neon-pink tracking-widest">NOT JACKED IN</h1>
+                <p className="text-od-muted mb-8 font-mono">You need OP_WALLET to broadcast on Bitcoin.</p>
+                <Button onClick={() => void connect()} size="lg">JACK IN</Button>
             </div>
         );
     }
 
     return (
         <div className="max-w-2xl mx-auto px-4 py-10">
-            <h1 className="text-3xl font-bold text-bd-text mb-2">Create Airdrop</h1>
-            <p className="text-bd-muted mb-8">Drop tokens to any list of Bitcoin addresses in one transaction.</p>
+            <h1 className="text-2xl font-display font-black mb-1 tracking-widest uppercase">
+                <span className="neon-pink">BROADCAST</span> SIGNAL
+            </h1>
+            <p className="text-od-muted mb-8 font-mono text-sm">Drop tokens to any list of addresses in one transaction.</p>
 
             {/* Progress */}
             <div className="flex items-center gap-2 mb-8">
                 {([1, 2, 3] as const).map((s) => (
                     <div key={s} className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                            step >= s ? 'bg-bd-purple text-white' : 'bg-bd-border text-bd-muted'
-                        }`}>
+                        <div className={`w-8 h-8 rounded flex items-center justify-center text-xs font-display font-bold border ${
+                            step >= s
+                                ? 'border-od-pink text-od-pink'
+                                : 'border-od-border text-od-muted'
+                        }`}
+                            style={step >= s ? { boxShadow: '0 0 8px rgba(255,45,120,0.4)' } : {}}>
                             {step > s ? '✓' : s}
                         </div>
-                        {s < 3 && <div className={`flex-1 h-0.5 w-12 ${step > s ? 'bg-bd-purple' : 'bg-bd-border'}`} />}
+                        {s < 3 && <div className={`flex-1 h-px w-12 ${step > s ? 'bg-od-pink' : 'bg-od-border'}`} />}
                     </div>
                 ))}
-                <div className="ml-auto text-sm text-bd-muted">
-                    {step === 1 ? 'Token' : step === 2 ? 'Recipients' : 'Done'}
+                <div className="ml-auto text-xs text-od-muted font-display tracking-widest uppercase">
+                    {step === 1 ? 'TARGET TOKEN' : step === 2 ? 'LOAD CREW' : 'TRANSMITTED'}
                 </div>
             </div>
 
             {/* Step 1: Token */}
             {step === 1 && (
-                <div className="bg-bd-card border border-bd-border rounded-xl p-6 space-y-4">
+                <div className="card-neon rounded-xl p-6 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-bd-text mb-2">
+                        <label className="block text-xs font-display font-bold text-od-muted mb-2 tracking-widest uppercase">
                             Token Contract Address
                         </label>
                         <input
@@ -134,71 +139,71 @@ export function CreatePage(): JSX.Element {
                             value={form.tokenAddress}
                             onChange={(e) => setForm((f) => ({ ...f, tokenAddress: e.target.value }))}
                             placeholder="0x..."
-                            className="w-full bg-bd-bg border border-bd-border rounded-lg px-4 py-3 text-bd-text font-mono text-sm focus:border-bd-purple focus:outline-none transition-colors"
+                            className="input-neon w-full rounded px-4 py-3 text-sm"
                         />
-                        <p className="text-xs text-bd-muted mt-1.5">
-                            The OP20 token you want to airdrop. Paste the contract address.
+                        <p className="text-xs text-od-muted mt-1.5 font-mono">
+                            The OP20 token you want to broadcast. Paste the contract address.
                         </p>
                     </div>
 
                     <Button onClick={() => setStep(2)} disabled={!canNext1} className="w-full">
-                        Next: Add Recipients →
+                        NEXT: LOAD CREW →
                     </Button>
                 </div>
             )}
 
             {/* Step 2: Recipients */}
             {step === 2 && (
-                <div className="bg-bd-card border border-bd-border rounded-xl p-6 space-y-4">
+                <div className="card-neon rounded-xl p-6 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-bd-text mb-2">
-                            Recipient List (CSV)
+                        <label className="block text-xs font-display font-bold text-od-muted mb-2 tracking-widest uppercase">
+                            Target List (CSV)
                         </label>
                         <textarea
                             value={form.rawCsv}
                             onChange={(e) => handleCsvChange(e.target.value)}
                             rows={10}
                             placeholder={`address,amount\n0xabc123...,1000000000\n0xdef456...,500000000`}
-                            className="w-full bg-bd-bg border border-bd-border rounded-lg px-4 py-3 text-bd-text font-mono text-xs focus:border-bd-purple focus:outline-none transition-colors resize-none"
+                            className="input-neon w-full rounded px-4 py-3 text-xs resize-none"
                         />
                         <div className="flex items-center justify-between mt-1.5">
-                            <p className="text-xs text-bd-muted">
-                                Format: <code className="bg-bd-bg px-1 rounded">address,amount</code> — one per line. Max 50 recipients.
+                            <p className="text-xs text-od-muted font-mono">
+                                Format: <code className="bg-od-bg px-1 rounded border border-od-border">address,amount</code> — one per line. Max 50 targets.
                             </p>
                             {form.entries.length > 0 && (
-                                <p className="text-xs text-bd-success">
-                                    {form.entries.length} valid
+                                <p className="text-xs text-od-green font-mono" style={{ textShadow: '0 0 6px #39FF14' }}>
+                                    {form.entries.length} locked
                                 </p>
                             )}
                         </div>
 
                         {parseError && (
-                            <div className="mt-2 bg-bd-danger/10 border border-bd-danger/30 rounded-lg p-3">
-                                <p className="text-xs text-bd-danger font-mono whitespace-pre-wrap">{parseError}</p>
+                            <div className="mt-2 bg-red-500/10 border border-red-500/30 rounded p-3">
+                                <p className="text-xs text-red-400 font-mono whitespace-pre-wrap">{parseError}</p>
                             </div>
                         )}
 
                         {form.entries.length > 50 && (
-                            <div className="mt-2 bg-bd-danger/10 border border-bd-danger/30 rounded-lg p-3">
-                                <p className="text-xs text-bd-danger">Maximum 50 recipients per campaign. You have {form.entries.length}.</p>
+                            <div className="mt-2 bg-red-500/10 border border-red-500/30 rounded p-3">
+                                <p className="text-xs text-red-400 font-mono">Max 50 targets per broadcast. You have {form.entries.length}.</p>
                             </div>
                         )}
 
                         {canNext2 && (
-                            <div className="mt-3 bg-bd-purple/10 border border-bd-purple/30 rounded-lg p-3">
-                                <p className="text-sm font-semibold text-bd-text mb-1">Campaign Summary</p>
-                                <div className="space-y-1 text-xs text-bd-muted">
+                            <div className="mt-3 bg-od-pink/5 border border-od-pink/20 rounded p-3">
+                                <p className="text-xs font-display font-bold text-od-text mb-2 tracking-widest uppercase">Transmission Summary</p>
+                                <div className="space-y-1.5 text-xs text-od-muted font-mono">
                                     <div className="flex justify-between">
                                         <span>Token</span>
-                                        <span className="font-mono text-bd-text">{formatAddress(form.tokenAddress)}</span>
+                                        <span className="text-od-cyan">{formatAddress(form.tokenAddress)}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span>Recipients</span>
-                                        <span className="text-bd-purple-lt">{form.entries.length}</span>
+                                        <span>Crew Size</span>
+                                        <span className="neon-pink">{form.entries.length}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span>Total Amount</span>
-                                        <span className="font-mono text-bd-text">{totalAmount.toLocaleString()}</span>
+                                        <span>Total Signal</span>
+                                        <span className="text-od-text">{formatAmount(totalAmount)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -207,7 +212,7 @@ export function CreatePage(): JSX.Element {
 
                     <div className="flex gap-3">
                         <Button variant="secondary" onClick={() => setStep(1)} className="flex-1">
-                            ← Back
+                            ← BACK
                         </Button>
                         <Button
                             onClick={() => void handleLaunch()}
@@ -216,31 +221,31 @@ export function CreatePage(): JSX.Element {
                             className="flex-1"
                         >
                             {txStatus === 'approving'
-                                ? 'Approving tokens…'
+                                ? 'AUTHORIZING…'
                                 : txStatus === 'launching'
-                                ? 'Launching…'
-                                : 'Approve & Launch 🚀'}
+                                ? 'BROADCASTING…'
+                                : 'BROADCAST 📡'}
                         </Button>
                     </div>
 
                     {txError && (
-                        <p className="text-xs text-bd-danger mt-2">{txError}</p>
+                        <p className="text-xs text-red-400 font-mono mt-2">{txError}</p>
                     )}
                 </div>
             )}
 
             {/* Step 3: Done */}
             {step === 3 && (
-                <div className="bg-bd-card border border-bd-border rounded-xl p-8 text-center">
-                    <div className="text-5xl mb-4">🎉</div>
-                    <h2 className="text-2xl font-bold text-bd-text mb-2">Airdrop Launched!</h2>
-                    <p className="text-bd-muted mb-6">
-                        Tokens have been distributed to {form.entries.length} recipients on Bitcoin L1.
+                <div className="card-neon rounded-xl p-8 text-center">
+                    <div className="text-5xl mb-4 flicker">📡</div>
+                    <h2 className="text-2xl font-display font-black mb-2 neon-cyan tracking-widest">SIGNAL SENT</h2>
+                    <p className="text-od-muted mb-6 font-mono text-sm">
+                        Tokens broadcast to {form.entries.length} addresses on Bitcoin L1. Recorded forever.
                     </p>
                     {txHash && (
-                        <div className="bg-bd-bg rounded-lg p-3 mb-6">
-                            <p className="text-xs text-bd-muted mb-1">Transaction Hash</p>
-                            <p className="font-mono text-xs text-bd-purple-lt break-all">{txHash}</p>
+                        <div className="bg-od-bg border border-od-border rounded p-3 mb-6">
+                            <p className="text-xs text-od-muted mb-1 font-display tracking-widest uppercase">Tx Hash</p>
+                            <p className="font-mono text-xs text-od-cyan break-all">{txHash}</p>
                         </div>
                     )}
                     <div className="flex gap-3 justify-center">
@@ -248,10 +253,10 @@ export function CreatePage(): JSX.Element {
                             variant="secondary"
                             onClick={() => { setStep(1); setForm(INITIAL_FORM); setTxStatus('idle'); setTxHash(null); }}
                         >
-                            Create Another
+                            BROADCAST AGAIN
                         </Button>
-                        <Button onClick={() => window.location.href = '/discover'}>
-                            View All Campaigns
+                        <Button onClick={() => { window.location.href = '/discover'; }}>
+                            SCAN THE GRID
                         </Button>
                     </div>
                 </div>

@@ -13,7 +13,7 @@ export function CampaignGrid({
     items,
     loading,
     error,
-    emptyMessage = 'No airdrops yet.',
+    emptyMessage = 'No transmissions yet.',
 }: CampaignGridProps): JSX.Element {
     if (loading) {
         return (
@@ -26,18 +26,18 @@ export function CampaignGrid({
     if (error) {
         return (
             <div className="text-center py-20">
-                <p className="text-4xl mb-3">🔌</p>
-                <p className="text-bd-danger font-semibold mb-1">Could not load campaigns</p>
-                <p className="text-bd-muted text-sm max-w-sm mx-auto">{error}</p>
+                <p className="text-4xl mb-3">📡</p>
+                <p className="text-red-400 font-display tracking-widest uppercase text-sm mb-1">Signal Lost</p>
+                <p className="text-od-muted text-sm max-w-sm mx-auto font-mono">{error}</p>
             </div>
         );
     }
 
     if (items.length === 0) {
         return (
-            <div className="text-center py-20 text-bd-muted">
-                <p className="text-4xl mb-3">🪂</p>
-                <p>{emptyMessage}</p>
+            <div className="text-center py-20 text-od-muted">
+                <p className="text-4xl mb-3">📡</p>
+                <p className="font-mono">{emptyMessage}</p>
             </div>
         );
     }

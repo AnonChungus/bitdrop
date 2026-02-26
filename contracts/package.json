@@ -1,7 +1,7 @@
 {
-  "name": "@bitdrop/contracts",
+  "name": "@opdrop/contracts",
   "version": "1.0.0",
-  "description": "BitDrop OPNet airdrop registry contracts",
+  "description": "OpDrop OPNet airdrop registry contracts",
   "scripts": {
     "build": "npm run build:registry",
     "build:registry": "asc src/AirdropRegistry/index.ts --config asconfig.json --target release",

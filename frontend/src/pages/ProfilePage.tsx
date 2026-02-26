@@ -14,26 +14,29 @@ export function ProfilePage(): JSX.Element {
             {/* Header */}
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="w-12 h-12 bg-bd-purple/20 rounded-xl flex items-center justify-center text-2xl">
-                        👤
+                    <div className="w-12 h-12 border border-od-cyan/30 rounded-xl flex items-center justify-center text-2xl"
+                        style={{ background: 'rgba(0,240,255,0.05)' }}>
+                        📡
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-bd-text">
-                            {addr ? formatAddress(addr, 10) : 'Profile'}
+                        <h1 className="text-xl font-display font-black tracking-widest uppercase">
+                            <span className="neon-cyan">{addr ? formatAddress(addr, 10) : 'OPERATOR'}</span>
                         </h1>
-                        <p className="text-bd-muted text-sm font-mono text-xs">
+                        <p className="text-od-muted text-xs font-mono">
                             {addr}
                         </p>
                     </div>
                 </div>
-                <p className="text-bd-muted">{total} campaigns created</p>
+                <p className="text-od-muted text-sm font-mono mt-1">
+                    {total} signals broadcast
+                </p>
             </div>
 
             <CampaignGrid
                 items={items}
                 loading={loading}
                 error={error}
-                emptyMessage="No campaigns created yet."
+                emptyMessage="No transmissions from this operator yet."
             />
         </div>
     );

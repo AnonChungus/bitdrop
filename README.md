@@ -1,22 +1,22 @@
-# BitDrop 🪂
+# OpDrop 📡
 
-**The permissionless airdrop machine on Bitcoin L1.**
+**The neon airdrop machine on Bitcoin L1.**
 
-BitDrop lets anyone drop OP20 tokens to any list of Bitcoin addresses in a single transaction — powered by OPNet smart contracts.
+OpDrop lets anyone broadcast OP20 tokens to any list of Bitcoin addresses in a single transaction — powered by OPNet smart contracts. No off-chain trust. No custodians. Carved into Bitcoin forever.
 
 ## What it does
 
-1. **Upload recipients** — Paste a CSV of `address,amount` pairs (up to 50 per campaign)
-2. **Approve tokens** — One-click token approval via OP_WALLET
-3. **Launch** — Single transaction creates the campaign and delivers tokens instantly
+1. **Load the Crew** — Paste a CSV of `address,amount` pairs (up to 50 per transmission)
+2. **Authorize** — One-click token approval via OP_WALLET
+3. **Broadcast** — Single transaction delivers tokens instantly to every wallet
 
-No off-chain trust. No custodians. Recorded forever on Bitcoin L1.
+No claiming required. No trust assumptions. Recorded on Bitcoin L1.
 
 ## Stack
 
 - **Contract** — AssemblyScript OPNet smart contract (`AirdropRegistry`)
 - **Backend** — HyperExpress REST API + MongoDB
-- **Frontend** — React 18 + Vite + Tailwind CSS
+- **Frontend** — React 18 + Vite + Tailwind CSS (80s Miami Vice aesthetic)
 
 ## Setup
 

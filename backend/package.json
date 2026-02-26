@@ -1,7 +1,7 @@
 {
-  "name": "@bitdrop/backend",
+  "name": "@opdrop/backend",
   "version": "1.0.0",
-  "description": "BitDrop backend API",
+  "description": "OpDrop backend API",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",

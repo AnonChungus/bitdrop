@@ -10,10 +10,10 @@ interface ButtonProps {
 }
 
 const variants: Record<string, string> = {
-    primary:   'bg-bd-purple hover:bg-bd-purple-dk text-white',
-    secondary: 'bg-bd-border hover:bg-[#2A2A3E] text-bd-text',
-    danger:    'bg-bd-danger/20 hover:bg-bd-danger/30 text-bd-danger',
-    ghost:     'hover:bg-bd-border text-bd-muted hover:text-bd-text',
+    primary:   'btn-neon-pink font-display tracking-widest uppercase',
+    secondary: 'border border-od-border hover:border-od-cyan/50 text-od-muted hover:text-od-text bg-transparent',
+    danger:    'border border-red-500/40 hover:border-red-500 text-red-400 hover:text-red-300 bg-transparent',
+    ghost:     'hover:bg-od-border/30 text-od-muted hover:text-od-text bg-transparent',
 };
 
 const sizes: Record<string, string> = {
