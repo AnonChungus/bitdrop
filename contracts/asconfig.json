@@ -1,0 +1,19 @@
+{
+  "targets": {
+    "release": {
+      "outFile": "dist/AirdropRegistry.wasm",
+      "sourceMap": false,
+      "optimizeLevel": 3,
+      "shrinkLevel": 2,
+      "converge": false,
+      "noAssert": false
+    }
+  },
+  "options": {
+    "bindings": "raw",
+    "transform": ["@btc-vision/opnet-transform"],
+    "disable": ["sign-extension"],
+    "enable": ["reference-types"],
+    "runtime": "stub"
+  }
+}

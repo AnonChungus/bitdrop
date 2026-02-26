@@ -1,0 +1,20 @@
+{
+  "name": "@bitdrop/contracts",
+  "version": "1.0.0",
+  "description": "BitDrop OPNet airdrop registry contracts",
+  "scripts": {
+    "build": "npm run build:registry",
+    "build:registry": "asc src/AirdropRegistry/index.ts --config asconfig.json --target release",
+    "format": "prettier --write src/**/*.ts",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@btc-vision/as-bignum": "latest",
+    "@btc-vision/btc-runtime": "latest"
+  },
+  "devDependencies": {
+    "@btc-vision/assemblyscript": "latest",
+    "@btc-vision/opnet-transform": "latest",
+    "prettier": "^3.0.0"
+  }
+}

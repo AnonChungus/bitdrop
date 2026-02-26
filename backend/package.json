@@ -1,0 +1,31 @@
+{
+  "name": "@bitdrop/backend",
+  "version": "1.0.0",
+  "description": "BitDrop backend API",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc --noEmit && tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@btc-vision/hyper-express": "latest",
+    "opnet": "rc",
+    "@btc-vision/transaction": "rc",
+    "@btc-vision/bitcoin": "rc",
+    "mongodb": "^6.8.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.39.2",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  }
+}
