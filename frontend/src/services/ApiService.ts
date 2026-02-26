@@ -98,4 +98,12 @@ export const ApiService = {
     async getStats(): Promise<{ totalCampaigns: number; totalRecipients: number }> {
         return fetchJson('/v1/stats');
     },
+
+    /**
+     * Fetch Bitcoin Taproot (bc1p...) holder addresses for a named ordinal collection.
+     * Backend proxies Magic Eden with a 10-minute cache.
+     */
+    async getCollectionHolders(collectionSymbol: string): Promise<{ addresses: readonly string[]; count: number }> {
+        return fetchJson(`/v1/holders/${encodeURIComponent(collectionSymbol)}`);
+    },
 };

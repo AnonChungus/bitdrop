@@ -19,6 +19,99 @@ function toCampaignDto(c: ICampaign): CampaignDto {
     };
 }
 
+// ---------------------------------------------------------------------------
+// Magic Eden holder cache
+// Caches holder lists (array of bc1p... Taproot addresses) per collection symbol.
+// TTL: 10 minutes — holder lists change slowly and ME API is rate-limited.
+// ---------------------------------------------------------------------------
+
+interface CacheEntry {
+    readonly addresses: readonly string[];
+    readonly fetchedAt: number;
+}
+
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const holderCache = new Map<string, CacheEntry>();
+
+/** Paginate Magic Eden ord tokens API and collect all holder addresses for a collection. */
+async function fetchMagicEdenHolders(collectionSymbol: string): Promise<readonly string[]> {
+    const allAddresses = new Set<string>();
+    const PAGE_SIZE = 100;
+    let offset = 0;
+    let totalFetched = 0;
+    const MAX_PAGES = 150; // cap at 15,000 items to avoid infinite loops
+
+    for (let page = 0; page < MAX_PAGES; page++) {
+        const url = `https://api-mainnet.magiceden.dev/v2/ord/btc/tokens?collectionSymbol=${encodeURIComponent(collectionSymbol)}&limit=${PAGE_SIZE}&offset=${offset}`;
+        let res: Response;
+        try {
+            res = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'OpDrop/1.0 (airdrop tool)',
+                },
+            });
+        } catch {
+            break; // network error — return what we have
+        }
+
+        if (res.status === 429) {
+            // Rate limited — wait 2 seconds and retry once
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            try {
+                res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            } catch {
+                break;
+            }
+        }
+
+        if (!res.ok) break;
+
+        interface MagicEdenToken { readonly owner?: string }
+        interface MagicEdenResponse { readonly tokens?: readonly MagicEdenToken[] }
+        const data = await res.json() as MagicEdenResponse;
+        const tokens = data.tokens ?? [];
+        if (tokens.length === 0) break;
+
+        for (const token of tokens) {
+            if (token.owner && token.owner.startsWith('bc1')) {
+                allAddresses.add(token.owner);
+            }
+        }
+
+        totalFetched += tokens.length;
+        offset += PAGE_SIZE;
+
+        if (tokens.length < PAGE_SIZE) break; // last page
+        // Small delay to respect rate limits
+        await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+
+    console.log(`[Holders] ${collectionSymbol}: fetched ${allAddresses.size} unique Taproot addresses (${totalFetched} items scanned)`);
+    return Array.from(allAddresses);
+}
+
+async function getHoldersCached(collectionSymbol: string): Promise<readonly string[]> {
+    const cached = holderCache.get(collectionSymbol);
+    if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+        return cached.addresses;
+    }
+    const addresses = await fetchMagicEdenHolders(collectionSymbol);
+    holderCache.set(collectionSymbol, { addresses, fetchedAt: Date.now() });
+    return addresses;
+}
+
+// Known safe collection symbols for the /v1/holders endpoint
+const ALLOWED_COLLECTIONS = new Set([
+    'motocats',
+    'bitcoin-puppets',
+    'nodemonkes',
+    'ordinal-maxi-biz',
+    'quantum-cats',
+    'bitcoin-frogs',
+    'taproot-wizards',
+]);
+
 export class ApiServer {
     readonly #app: HyperExpress.Server;
 
@@ -56,6 +149,25 @@ export class ApiServer {
                 totalRecipients: stats.totalRecipients,
             };
             res.json(dto);
+        });
+
+        // Ordinal collection holders — proxies Magic Eden with caching.
+        // Returns { addresses: string[], count: number, source: string }
+        // where addresses are Bitcoin Taproot (bc1p...) wallet addresses.
+        this.#app.get('/v1/holders/:collection', async (req, res) => {
+            const collection = req.path_parameters['collection'];
+            if (!collection || !ALLOWED_COLLECTIONS.has(collection)) {
+                res.status(400).json({ error: 'Unknown collection. Allowed: ' + [...ALLOWED_COLLECTIONS].join(', ') });
+                return;
+            }
+            const addresses = await getHoldersCached(collection);
+            res.json({
+                collection,
+                addresses,
+                count: addresses.length,
+                cachedAt: holderCache.get(collection)?.fetchedAt ?? 0,
+                source: 'magic-eden-ordinals',
+            });
         });
 
         // List campaigns
@@ -132,6 +244,6 @@ export class ApiServer {
 
     public async listen(): Promise<void> {
         await this.#app.listen(Config.port, '0.0.0.0');
-        console.log(`[BitDrop API] http://0.0.0.0:${Config.port}`);
+        console.log(`[OpDrop API] Listening on http://0.0.0.0:${Config.port}`);
     }
 }

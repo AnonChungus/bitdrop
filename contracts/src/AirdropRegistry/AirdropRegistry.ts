@@ -127,8 +127,13 @@ export class AirdropRegistry extends OP_NET {
         const token = calldata.readAddress();
         const count = calldata.readU32();
 
-        if (count === 0 || count > 50) {
-            throw new Revert('Recipients must be 1-50');
+        // Per-call limit is capped by Bitcoin transaction witness data size.
+        // At 64 bytes/recipient, 500 recipients ≈ 32 KB witness → safe for all miners.
+        // The frontend handles client-side batching for lists larger than BATCH_SIZE.
+        // The contract itself enforces a generous per-call cap of 5 000 entries to
+        // prevent malformed oversized calldata; realistic single-tx limit is ~500.
+        if (count === 0 || count > 5000) {
+            throw new Revert('Recipient count must be 1-5000 per call');
         }
 
         // Read entries and accumulate total

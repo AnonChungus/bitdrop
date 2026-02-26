@@ -29,22 +29,26 @@ export function Navbar(): JSX.Element {
                         <span className="neon-pink">OP</span>
                         <span className="neon-cyan">DROP</span>
                     </span>
+                    <span className="hidden sm:block text-xs text-od-muted/60 font-mono ml-1">OP20 Airdrops on Bitcoin</span>
                 </Link>
 
                 {/* Nav links */}
                 <nav className="hidden sm:flex items-center gap-8">
-                    {navLink('/discover', 'Scan')}
-                    {navLink('/create', 'Broadcast')}
-                    {wallet.connected && navLink(`/profile/${wallet.address}`, 'My Signals')}
+                    {navLink('/airdrops', 'All Airdrops')}
+                    {navLink('/create', 'New Airdrop')}
+                    {wallet.connected && navLink(`/profile/${wallet.address}`, 'My Airdrops')}
                 </nav>
 
                 {/* Wallet */}
                 <div className="flex items-center gap-3">
                     {wallet.connected ? (
                         <div className="flex items-center gap-3">
-                            <span className="hidden sm:block text-xs font-mono text-od-cyan">
-                                {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}
-                            </span>
+                            <div className="hidden sm:block text-right">
+                                <p className="text-xs font-mono text-od-cyan">
+                                    {wallet.address.slice(0, 8)}…{wallet.address.slice(-6)}
+                                </p>
+                                <p className="text-xs text-od-muted font-mono">Taproot · OPNet</p>
+                            </div>
                             <span className="text-xs border border-od-green text-od-green px-2 py-0.5 rounded font-mono"
                                 style={{ textShadow: '0 0 6px #39FF14' }}>
                                 {wallet.network.toUpperCase()}
@@ -53,7 +57,7 @@ export function Navbar(): JSX.Element {
                                 onClick={disconnect}
                                 className="text-xs text-od-muted hover:text-od-pink transition-colors font-mono"
                             >
-                                [DISCONNECT]
+                                [disconnect]
                             </button>
                         </div>
                     ) : (
@@ -61,7 +65,7 @@ export function Navbar(): JSX.Element {
                             onClick={() => void connect()}
                             className="btn-neon-pink font-display text-xs font-bold px-4 py-2 rounded tracking-widest uppercase"
                         >
-                            JACK IN
+                            SIGN IN
                         </button>
                     )}
                 </div>

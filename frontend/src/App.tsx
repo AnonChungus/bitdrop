@@ -9,12 +9,13 @@ import { ProfilePage } from './pages/ProfilePage.js';
 export function App(): JSX.Element {
     return (
         <BrowserRouter>
-            <div className="min-h-screen bg-bd-bg text-bd-text">
+            <div className="min-h-screen bg-od-bg text-od-text crt retro-grid">
                 <Navbar />
                 <main>
                     <Routes>
                         <Route path="/"                   element={<HomePage />} />
                         <Route path="/discover"           element={<DiscoverPage />} />
+                        <Route path="/airdrops"           element={<DiscoverPage />} />
                         <Route path="/create"             element={<CreatePage />} />
                         <Route path="/campaign/:id"       element={<CampaignPage />} />
                         <Route path="/profile/:addr"      element={<ProfilePage />} />
